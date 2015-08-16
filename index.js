@@ -84,6 +84,8 @@ Issue.prototype.isError = function()
 
 Issue.prototype.getMessage = function(colorize)
 {
+    var enabled = chalk.enabled;
+
     colorize = colorize === undefined ? true : !!colorize;
     chalk.enabled = colorize;
 
@@ -123,15 +125,19 @@ Issue.prototype.getMessage = function(colorize)
                  chalk[colorMap.caret]("^") +
                  trimRight(highlights.substring(this.lineInfo.column + 1));
 
-    return messageTemplate(
-        {
-            context: coloredContext,
-            severity: severity,
-            message: chalk[colorMap.message](this.message),
-            source: this.source,
-            highlights: highlights
-        }
-    );
+    var message = messageTemplate(
+            {
+                context: coloredContext,
+                severity: severity,
+                message: chalk[colorMap.message](this.message),
+                source: this.source,
+                highlights: highlights
+            }
+        );
+
+    chalk.enabled = enabled;
+
+    return message;
 };
 
 Issue.prototype.addHighlight = function(node)
