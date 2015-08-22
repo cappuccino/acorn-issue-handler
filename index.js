@@ -54,40 +54,45 @@ var Issue = exports.Issue = function(source, sourcePath, location, message, seve
     if (global.Error.captureStackTrace)
         global.Error.captureStackTrace(this);
 
-    this.message = message || "";
     this.name = "Issue";
+    this.message = message || "";
 
-    /*
-        location could be:
-
-        - acorn.Node
-        - SyntaxError raised by acorn
-        - acorn.SourceLocation
-        - object with start property
-        - numeric start position
-    */
-    if (location.loc)
+    // Allow empty constructor so we can use tests like chai.should.throw,
+    // which call an empty constructor to test against.
+    if (source !== undefined)
     {
-        this.lineInfo = {
-            line: location.loc.line,
-            column: location.loc.column
-        };
-    }
-    else
-    {
-        if (typeof location === "number")
-            location = { start: location, end: location };
+        /*
+            location could be:
 
-        this.lineInfo = acorn.getLineInfo(source, location.start);
-    }
+            - acorn.Node
+            - SyntaxError raised by acorn
+            - acorn.SourceLocation
+            - object with start property
+            - numeric start position
+        */
+        if (location.loc)
+        {
+            this.lineInfo = {
+                line: location.loc.line,
+                column: location.loc.column
+            };
+        }
+        else
+        {
+            if (typeof location === "number")
+                location = { start: location, end: location };
 
-    this.lineInfo.lineStart = location.start - this.lineInfo.column;
-    this.lineInfo.lineEnd = findLineEnd(source, location.end);
-    this.lineInfo.sourceLength = source.length;
-    this.source = trimRight(source.substring(this.lineInfo.lineStart, this.lineInfo.lineEnd));
-    this.sourcePath = sourcePath;
-    this.highlightedNodes = [];
-    this.severity = severity;
+            this.lineInfo = acorn.getLineInfo(source, location.start);
+        }
+
+        this.lineInfo.lineStart = location.start - this.lineInfo.column;
+        this.lineInfo.lineEnd = findLineEnd(source, location.end);
+        this.lineInfo.sourceLength = source.length;
+        this.source = trimRight(source.substring(this.lineInfo.lineStart, this.lineInfo.lineEnd));
+        this.sourcePath = sourcePath;
+        this.highlightedNodes = [];
+        this.severity = severity;
+    }
 };
 
 util.inherits(Issue, global.Error);
