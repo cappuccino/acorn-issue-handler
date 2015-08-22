@@ -236,24 +236,6 @@ exports.Error = function(source, sourcePath, location, message)
 
 util.inherits(exports.Error, Issue);
 
-exports.FatalError = function(source, sourcePath, location, message)
-{
-    exports.FatalError.super_.call(this, source, sourcePath, location, message || "a fatal error occurred", "error");
-    this.name = "FatalError";
-};
-
-util.inherits(exports.FatalError, exports.Error);
-
-exports.InternalError = function(source, sourcePath, location, message)
-{
-    exports.InternalError.super_.call(
-        this, source, sourcePath, location, message || "an internal error occurred", "error");
-
-    this.name = "InternalError";
-};
-
-util.inherits(exports.InternalError, exports.FatalError);
-
 function slice(args, start)
 {
     var copy = [];
@@ -310,16 +292,6 @@ exports.addWarning = function(issues, source, sourcePath, location, message)
 exports.addError = function(issues, source, sourcePath, location, message)
 {
     return addIssueFromArgs(exports.Error, arguments);
-};
-
-exports.addFatalError = function(issues, source, sourcePath, location, message)
-{
-    return addIssueFromArgs(exports.FatalError, arguments);
-};
-
-exports.addInternalError = function(issues, source, sourcePath, location, message)
-{
-    return addIssueFromArgs(exports.InternalError, arguments);
 };
 
 /* eslint-enable */
