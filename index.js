@@ -314,13 +314,18 @@ exports.addAcornError = function(issues, error, source, sourcePath)
     if (match)
         message = match[1];
 
-    return exports.addError(
+    var ex = exports.addError(
         issues,
         source,
         sourcePath,
         location,
         message
     );
+
+    // Set the name to "SyntaxError" so we see that in a stack trace
+    ex.name = "SyntaxError";
+
+    return ex;
 };
 
 exports.getErrorCount = function(issues)
