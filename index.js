@@ -296,7 +296,7 @@ exports.addError = function(issues, source, sourcePath, location, message)
 
 /* eslint-enable */
 
-var stripLocRE = /^(.+)\s*\(\d+:\d+\)$/;
+var stripLocRE = /^(.+)\s+\(\d+:\d+\)$/;
 
 exports.addAcornError = function(issues, error, source, sourcePath)
 {
