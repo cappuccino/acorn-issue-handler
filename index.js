@@ -47,7 +47,19 @@ function findLineEnd(source, pos)
     return source.length;
 }
 
-var Issue = exports.Issue = function(source, sourcePath, location, message, severity)
+/**
+ * Base class for all acorn-based issues.
+ *
+ * @class
+ *
+ * @param {string} source - The source code in which the issue occurred.
+ * @param {string} file - The path to the source code. This is not checked in any way so may be virtual,
+ * for example "<command line>".
+ * @param {acorn.Node|acorn.SourceLocation|SyntaxError|object|number} location - Where the issue occurred within the source.
+ * @param {string} message - The message to display to the user.
+ * @param {string} severity - Should be "error", "warning" or "note".
+ */
+var Issue = function(source, file, location, message, severity)
 {
     global.Error.call(this);
 
@@ -61,15 +73,6 @@ var Issue = exports.Issue = function(source, sourcePath, location, message, seve
     // which call an empty constructor to test against.
     if (source !== undefined)
     {
-        /*
-            location could be:
-
-            - acorn.Node
-            - SyntaxError raised by acorn
-            - acorn.SourceLocation
-            - object with start property
-            - numeric start position
-        */
         if (location.loc)
         {
             this.lineInfo = {
@@ -89,12 +92,13 @@ var Issue = exports.Issue = function(source, sourcePath, location, message, seve
         this.lineInfo.lineEnd = findLineEnd(source, location.end);
         this.lineInfo.sourceLength = source.length;
         this.source = trimRight(source.substring(this.lineInfo.lineStart, this.lineInfo.lineEnd));
-        this.sourcePath = sourcePath;
+        this.file = file;
         this.highlightedNodes = [];
         this.severity = severity;
     }
 };
 
+exports.Issue = Issue;
 util.inherits(Issue, global.Error);
 
 Issue.prototype.isWarning = function()
@@ -124,7 +128,7 @@ Issue.prototype.getFormattedMessage = function(colorize)
         );
     }
 
-    var context = util.format("%s:%d:%d:", this.sourcePath, this.lineInfo.line, this.lineInfo.column + 1),
+    var context = util.format("%s:%d:%d:", this.file, this.lineInfo.line, this.lineInfo.column + 1),
         coloredContext = chalk[colorMap.message](context),
         severity = chalk[colorMap[this.severity]](this.severity + ":"),
         highlights = repeat(" ", this.source.length);
@@ -212,25 +216,28 @@ Issue.prototype.addHighlight = function(location)
     this.highlightedNodes.push(location);
 };
 
-exports.Note = function(source, sourcePath, location, message)
+/** @class */
+exports.Note = function(source, file, location, message)
 {
-    exports.Note.super_.call(this, source, sourcePath, location, message, "note");
+    exports.Note.super_.call(this, source, file, location, message, "note");
     this.name = "Note";
 };
 
 util.inherits(exports.Note, Issue);
 
-exports.Warning = function(source, sourcePath, location, message)
+/** @class */
+exports.Warning = function(source, file, location, message)
 {
-    exports.Warning.super_.call(this, source, sourcePath, location, message, "warning");
+    exports.Warning.super_.call(this, source, file, location, message, "warning");
     this.name = "Warning";
 };
 
 util.inherits(exports.Warning, Issue);
 
-exports.Error = function(source, sourcePath, location, message)
+/** @class */
+exports.Error = function(source, file, location, message)
 {
-    exports.Error.super_.call(this, source, sourcePath, location, message, "error");
+    exports.Error.super_.call(this, source, file, location, message, "error");
     this.name = "Error";
 };
 
@@ -249,7 +256,7 @@ function slice(args, start)
     return copy;
 }
 
-exports.addIssue = function(Class, issues, source, sourcePath, location, message)
+exports.addIssue = function(Class, issues, source, file, location, message)
 {
     // Mozilla docs say not to use Array.prototype.slice on arguments
     var args = slice(arguments, 6);
@@ -258,7 +265,7 @@ exports.addIssue = function(Class, issues, source, sourcePath, location, message
 
     var issue = new Class(
             source,
-            sourcePath,
+            file,
             location,
             util.format.apply(null, args)
         );
@@ -279,17 +286,17 @@ function addIssueFromArgs(Class, args)
 
 /* eslint-disable no-unused-vars */
 
-exports.addNote = function(issues, source, sourcePath, location, message)
+exports.addNote = function(issues, source, file, location, message)
 {
     return addIssueFromArgs(exports.Note, arguments);
 };
 
-exports.addWarning = function(issues, source, sourcePath, location, message)
+exports.addWarning = function(issues, source, file, location, message)
 {
     return addIssueFromArgs(exports.Warning, arguments);
 };
 
-exports.addError = function(issues, source, sourcePath, location, message)
+exports.addError = function(issues, source, file, location, message)
 {
     return addIssueFromArgs(exports.Error, arguments);
 };
@@ -298,7 +305,7 @@ exports.addError = function(issues, source, sourcePath, location, message)
 
 var stripLocRE = /^(.+)\s+\(\d+:\d+\)$/;
 
-exports.addAcornError = function(issues, error, source, sourcePath)
+exports.addAcornError = function(issues, error, source, file)
 {
     // Make a fake location object that contains the start position of the error
     var location = {
@@ -315,12 +322,12 @@ exports.addAcornError = function(issues, error, source, sourcePath)
         message = match[1];
 
     var ex = exports.addError(
-        issues,
-        source,
-        sourcePath,
-        location,
-        message
-    );
+            issues,
+            source,
+            file,
+            location,
+            message
+        );
 
     // Set the name to "SyntaxError" so we see that in a stack trace
     ex.name = "SyntaxError";
