@@ -4,6 +4,19 @@
         "node": true,
         "amd": true
     },
+    "ecmaFeatures": {
+        "arrowFunctions": true,
+        "binaryLiterals": true,
+        "blockBindings": true,
+        "classes": true,
+        "forOf": true,
+        "generators": true,
+        "objectLiteralComputedProperties": true,
+        "objectLiteralShorthandMethods": true,
+        "objectLiteralShorthandProperties": true,
+        "superInFunctions": true,
+        "templateStrings": true
+    },
     "globals": {
         "DEBUG": false
     },

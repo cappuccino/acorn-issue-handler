@@ -1,58 +1,39 @@
 "use strict";
 
-var acorn = require("acorn"),
+let acorn = require("acorn"),
     chalk = require("chalk"),
-    lodashTemplate = require("lodash.template"),
-    repeat = require("lodash.repeat"),
     reporters = require("./lib/reporters"),
     trimRight = require("lodash.trimright"),
     util = require("util");
 
-// jscs: disable requireMultipleVarDecl
+const kDefaultColorMap = new Map([
+    ["file", chalk.gray.bold],
+    ["location", chalk.gray.bold],
+    ["error", chalk.red.bold],
+    ["warning", chalk.magenta.bold],
+    ["note", chalk.yellow.bold],
+    ["message", chalk.gray.bold],
+    ["source", null],
+    ["caret", chalk.green]
+]);
 
-var colorMap = {
-        file: chalk.gray.bold,
-        location: chalk.gray.bold,
-        error: chalk.red.bold,
-        warning: chalk.magenta.bold,
-        note: chalk.yellow.bold,
-        message: chalk.gray.bold,
-        source: null,
-        caret: chalk.green
-    },
-    messageTemplate = null;
-
-// jscs: enable
+let colorMap = new Map(kDefaultColorMap);
 
 exports.setColorMap = function(map)
 {
-    var keys = Object.keys(map);
+    let keys = map.constructor === Map ? map.keys() : Object.keys(map);
 
-    for (var i = 0; i < keys.length; ++i)
+    for (let key of keys)
     {
-        var key = keys[i];
-
-        if (colorMap.hasOwnProperty(key))
-            colorMap[key] = map[key];
+        if (colorMap.has(key))
+            colorMap.set(key, map.get(key));
     }
 };
 
-function noColor(text)
+exports.resetColorMap = function()
 {
-    return text;
-}
-
-function findLineEnd(source, pos)
-{
-    acorn.lineBreakG.lastIndex = pos;
-
-    var match = acorn.lineBreakG.exec(source);
-
-    if (match)
-        return match.index;
-
-    return source.length;
-}
+    colorMap = new Map(kDefaultColorMap);
+};
 
 /**
  * Base class for all acorn-based issues.
@@ -68,227 +49,237 @@ function findLineEnd(source, pos)
  * @param {string} message - The message to display to the user.
  * @param {string} severity - Should be "error", "warning" or "note".
  */
-var Issue = function(source, file, location, message, severity)
+class Issue extends SyntaxError
 {
-    SyntaxError.call(this);
-
-    if (global.Error.captureStackTrace)
-        global.Error.captureStackTrace(this);
-
-    this.name = "Issue";
-    this.message = message || "";
-
-    // Allow empty constructor so we can use tests like chai.should.throw,
-    // which call an empty constructor to test against.
-    if (source !== undefined)
+    constructor(source, file, location, message, severity)
     {
-        if (location.loc)
-        {
-            this.lineInfo = {
-                line: location.loc.line,
-                column: location.loc.column
-            };
-        }
-        else
-        {
-            if (typeof location === "number")
-                location = { start: location, end: location };
+        super();
 
-            this.lineInfo = acorn.getLineInfo(source, location.start);
+        if (global.Error.captureStackTrace)
+            global.Error.captureStackTrace(this);
+
+        this.name = "Issue";
+        this.message = message || "";
+
+        function findLineEnd(text, pos)
+        {
+            acorn.lineBreakG.lastIndex = pos;
+
+            let match = acorn.lineBreakG.exec(text);
+
+            if (match)
+                return match.index;
+
+            return text.length;
         }
 
-        this.lineInfo.lineStart = location.start - this.lineInfo.column;
-        this.lineInfo.lineEnd = findLineEnd(source, location.end);
-        this.lineInfo.sourceLength = source.length;
-        this.source = trimRight(source.substring(this.lineInfo.lineStart, this.lineInfo.lineEnd));
-        this.file = file;
-        this.highlightedNodes = [];
-        this.severity = severity;
-    }
-};
-
-exports.Issue = Issue;
-util.inherits(Issue, SyntaxError);
-
-Issue.prototype.addHighlight = function(location)
-{
-    this.highlightedNodes.push(location);
-};
-
-Issue.prototype.isError = function()
-{
-    return this instanceof exports.Error;
-};
-
-Issue.prototype.isWarning = function()
-{
-    return this instanceof exports.Warning;
-};
-
-Issue.prototype.isNote = function()
-{
-    return this instanceof exports.Note;
-};
-
-Issue.prototype.getFormattedMessage = function(colorize)
-{
-    var enabled = chalk.enabled;
-
-    colorize = colorize === undefined ? true : !!colorize;
-    chalk.enabled = colorize;
-
-    if (!messageTemplate)
-    {
-        messageTemplate = lodashTemplate(
-            "${data.context} ${data.severity} ${data.message}\n" +
-            "${data.source}\n" +
-            "${data.caret}\n",
-            { variable: "data" }
-        );
-    }
-
-    var coloredFile = (colorMap.file || noColor)(this.file + ":"),
-        location = util.format("%d:%d:", this.lineInfo.line, this.lineInfo.column + 1),
-        coloredLocation = (colorMap.location || noColor)(location),
-        severity = (colorMap[this.severity] || noColor)(this.severity + ":"),
-        caret = repeat(" ", this.source.length);
-
-    caret = caret.substring(0, this.lineInfo.column) +
-                (colorMap.caret || noColor)("^") +
-                trimRight(caret.substring(this.lineInfo.column + 1));
-
-    var message = this.message.charAt(0).toLowerCase() + this.message.substr(1),
-        formattedMessage = messageTemplate(
+        // Allow empty constructor so we can use tests like chai.should.throw,
+        // which call an empty constructor to test against.
+        if (source !== undefined)
+        {
+            if (location.loc)
             {
+                this.lineInfo = {
+                    line: location.loc.line,
+                    column: location.loc.column
+                };
+            }
+            else
+            {
+                if (typeof location === "number")
+                    location = { start: location, end: location };
+
+                this.lineInfo = acorn.getLineInfo(source, location.start);
+            }
+
+            this.lineInfo.lineStart = location.start - this.lineInfo.column;
+            this.lineInfo.lineEnd = findLineEnd(source, location.end);
+            this.lineInfo.sourceLength = source.length;
+            this.source = trimRight(source.substring(this.lineInfo.lineStart, this.lineInfo.lineEnd));
+            this.file = file;
+            this.severity = severity;
+        }
+    }
+
+    isError()
+    {
+        return this instanceof exports.Error;
+    }
+
+    isWarning()
+    {
+        return this instanceof exports.Warning;
+    }
+
+    isNote()
+    {
+        return this instanceof exports.Note;
+    }
+
+    getFormattedMessage(colorize)
+    {
+        let enabled = chalk.enabled;
+
+        colorize = colorize === undefined ? true : !!colorize;
+        chalk.enabled = colorize;
+
+        function colorizeText(color, text)
+        {
+            if (!colorize)
+                return text;
+
+            let func = colorMap.get(color);
+
+            if (func)
+                return func(text);
+
+            return text;
+        }
+
+        let coloredFile = colorizeText("file", this.file + ":"),
+            location = `${this.lineInfo.line}:${this.lineInfo.column + 1}:`,
+            coloredLocation = colorizeText("location", location),
+            severity = colorizeText(this.severity, this.severity + ":"),
+            caret = " ".repeat(this.source.length);
+
+        caret = caret.substring(0, this.lineInfo.column) +
+            colorizeText("caret", "^") +
+            trimRight(caret.substring(this.lineInfo.column + 1));
+
+        let message = this.message.charAt(0).toLowerCase() + this.message.substr(1),
+            data = {
                 context: coloredFile + coloredLocation,
                 severity: severity,
-                message: (colorMap.message || noColor)(message),
-                source: (colorMap.source || noColor)(this.source),
+                message: colorizeText("message", message),
+                source: colorizeText("source", this.source),
                 caret: caret
-            }
-        );
+            },
+            formattedMessage = `${data.context} ${data.severity} ${data.message}\n${data.source}\n${data.caret}\n`;
 
-    chalk.enabled = enabled;
+        chalk.enabled = enabled;
 
-    return formattedMessage;
-};
-
-/**
- * Return a stack trace for this issue, filtering out internal calls.
- *
- * @param {string[]} filter - Array of calls in the stack trace to filter out. Don't include "at ",
- * and be sure to regex escape the text, for example: ["Parser\\.acorn.Parser.objj_raise"]
- * @returns {string}
- */
-Issue.prototype.getStackTrace = function(filter)
-{
-    // finder function sets this to the line index of the first found line
-    var lineIndex = 0;
-
-    function finder(match)
-    {
-        var regex = new RegExp("^\\s+at " + match);
-
-        return function(element, index)
-        {
-            if (regex.test(element))
-            {
-                lineIndex = index;
-
-                return true;
-            }
-        };
+        return formattedMessage;
     }
 
-    var stack = this.stack.split("\n"),
-        first = -1; // index of the first item we want to keep
-
-    /*
-        Get rid of our internal stuff. Look for the following stack items:
-
-        - Whatever is specified in filter
-        - Object.exports.addAcornError
-        - 2 after addIssueFromArgs
-        - exports.addIssue
-        - new exports.*
-    */
-    if (filter !== undefined)
+    /**
+     * Return a stack trace for this issue, filtering out internal calls.
+     *
+     * @param {string[]} filter - Array of calls in the stack trace to filter out. Don't include "at ",
+     * and be sure to regex escape the text, for example: ["Parser\\.acorn.Parser.objj_raise"]
+     * @returns {string}
+     */
+    getStackTrace(filter)
     {
-        for (var i = 0; i < filter.length; ++i)
+        // finder function sets this to the line index of the first found line
+        let lineIndex = 0;
+
+        function finder(match)
         {
-            if (stack.some(finder(filter[i])))
+            let regex = new RegExp("^\\s+at " + match);
+
+            return function(element, index)
             {
-                first = lineIndex + 1;
-                break;
+                if (regex.test(element))
+                {
+                    lineIndex = index;
+
+                    return true;
+                }
+            };
+        }
+
+        let stack = this.stack.split("\n"),
+            first = -1; // index of the first item we want to keep
+
+        /*
+            Get rid of our internal stuff. Look for the following stack items:
+
+            - Whatever is specified in filter
+            - Object.exports.addAcornError
+            - 2 after addIssueFromArgs
+            - exports.addIssue
+            - new exports.*
+        */
+        if (filter !== undefined)
+        {
+            for (let f of filter)
+            {
+                if (stack.some(finder(f)))
+                {
+                    first = lineIndex + 1;
+                    break;
+                }
             }
         }
+
+        if (first < 0)
+        {
+            if (stack.some(finder("Object\\.exports\\.addAcornError")))
+                first = lineIndex + 1;
+            else if (stack.some(finder("addIssueFromArgs")))
+                first = lineIndex + 2;
+            else if (stack.some(finder("exports\\.addIssue")) || stack.some(finder("new exports\\.")))
+                first = lineIndex + 1;
+            else
+                first = 1;
+        }
+
+        stack.splice(1, first - 1);
+
+        return stack.join("\n");
     }
-
-    if (first < 0)
-    {
-        if (stack.some(finder("Object\\.exports\\.addAcornError")))
-            first = lineIndex + 1;
-        else if (stack.some(finder("addIssueFromArgs")))
-            first = lineIndex + 2;
-        else if (stack.some(finder("exports\\.addIssue")) || stack.some(finder("new exports\\.")))
-            first = lineIndex + 1;
-        else
-            first = 1;
-    }
-
-    stack.splice(1, first - 1);
-
-    return stack.join("\n");
-};
-
-/** @class */
-exports.Note = function(source, file, location, message)
-{
-    exports.Note.super_.call(this, source, file, location, message, "note");
-    this.name = "Note";
-};
-
-util.inherits(exports.Note, Issue);
-
-/** @class */
-exports.Warning = function(source, file, location, message)
-{
-    exports.Warning.super_.call(this, source, file, location, message, "warning");
-    this.name = "Warning";
-};
-
-util.inherits(exports.Warning, Issue);
-
-/** @class */
-exports.Error = function(source, file, location, message)
-{
-    exports.Error.super_.call(this, source, file, location, message, "error");
-    this.name = "Error";
-};
-
-util.inherits(exports.Error, Issue);
-
-function slice(args, start)
-{
-    var copy = [];
-
-    if (start === undefined)
-        start = 0;
-
-    for (var i = start; i < args.length; ++i)
-        copy.push(args[i]);
-
-    return copy;
 }
+
+/** @class */
+class Note extends Issue
+{
+    constructor(source, file, location, message)
+    {
+        super(source, file, location, message, "note");
+        this.name = "Note";
+    }
+}
+
+/** @class */
+class Warning extends Issue
+{
+    constructor(source, file, location, message)
+    {
+        super(source, file, location, message, "warning");
+        this.name = "Warning";
+    }
+}
+
+/** @class */
+class Error extends Issue
+{
+    constructor(source, file, location, message)
+    {
+        super(source, file, location, message, "error");
+        this.name = "Error";
+    }
+}
+
+// Functional API
 
 function addIssue(Class, issues, source, file, location, message)
 {
     // Mozilla docs say not to use Array.prototype.slice on arguments
-    var args = slice(arguments, 6);
+    function slice(args, start)
+    {
+        let copy = [];
+
+        for (let i = start; i < args.length; ++i)
+            copy.push(args[i]);
+
+        return copy;
+    }
+
+    let args = slice(arguments, 6);
 
     args.unshift(message);
 
-    var issue = new Class(
+    let issue = new Class(
             source,
             file,
             location,
@@ -302,7 +293,7 @@ function addIssue(Class, issues, source, file, location, message)
 
 function addIssueFromArgs(Class, args)
 {
-    var newArgs = slice(args);
+    let newArgs = Array.from(args);
 
     newArgs.unshift(Class);
 
@@ -328,12 +319,12 @@ exports.addError = function(issues, source, file, location, message)
 
 /* eslint-enable */
 
-var stripLocRE = /^(.+)\s+\(\d+:\d+\)$/;
+let stripLocRE = /^(.+)\s+\(\d+:\d+\)$/;
 
 exports.stripLocation = function(text)
 {
     // Strip (line:column) from message
-    var match = stripLocRE.exec(text);
+    let match = stripLocRE.exec(text);
 
     return match ? match[1] : text;
 };
@@ -341,7 +332,7 @@ exports.stripLocation = function(text)
 exports.addAcornError = function(issues, error, source, file)
 {
     // Make a fake location object that contains the start position of the error
-    var location = {
+    let location = {
             start: error.pos,
             end: error.pos,
             loc: { line: error.loc.line, column: error.loc.column }
@@ -363,36 +354,33 @@ exports.addAcornError = function(issues, error, source, file)
 
 exports.getErrorCount = function(issues)
 {
-    var errors = issues.filter(function(issue) { return issue.isError(); });
-
-    return errors.length;
+    return issues.filter(issue => issue.isError()).length;
 };
 
 exports.getWarningCount = function(issues)
 {
-    var errors = issues.filter(function(issue) { return issue.isWarning(); });
-
-    return errors.length;
+    return issues.filter(issue => issue.isWarning()).length;
 };
 
-function runReport(issues, ReporterClass, colorize)
+function runReport(ReporterClass, issues, colorize)
 {
-    colorize = arguments.length > 1 ? !!colorize : true;
+    colorize = colorize === undefined ? true : !!colorize;
 
-    var reporter = new ReporterClass(colorize);
-
-    return reporter.report(issues);
+    return new ReporterClass(colorize).report(issues);
 }
 
 exports.getFormattedIssues = function(issues, colorize)
 {
-    return runReport(issues, reporters.StandardReporter, colorize);
+    return runReport(reporters.StandardReporter, issues, colorize);
 };
 
 exports.logIssues = function(issues, colorize)
 {
-    runReport(issues, reporters.ConsoleReporter, colorize);
+    runReport(reporters.ConsoleReporter, issues, colorize);
 };
 
+exports.Note = Note;
+exports.Warning = Warning;
+exports.Error = Error;
 exports.StandardReporter = reporters.StandardReporter;
 exports.SilentReporter = reporters.SilentReporter;

@@ -149,7 +149,7 @@ The API is built on two key classes, `Issue` and `Reporter`, along with their su
 
 ### Issue(source, file, location, message, severity) \[extends SyntaxError]
 
-This class serves as the base class for all issues, and contains most of the functionality. You should **not** construct an Issue directly; use the functional API to create a subclass of `Issue` and add it to an array of issues.
+This class serves as the base class for all issues, and contains most of the functionality. It is not part of the public API, but is documented because its subclasses are. In general, you should use the functional API to create a subclass of `Issue` and add it to an array of issues.
 
  * **source** - The source code in which the issue occurred.
  * **file** - The path to the source code. This is not checked in any way for validity, so it may be virtual, for example '<command line>'.
