@@ -11,12 +11,14 @@ var acorn = require("acorn"),
 // jscs: disable requireMultipleVarDecl
 
 var colorMap = {
-        note: "yellow",
-        warning: "magenta",
-        error: "red",
-        message: "gray",
-        caret: "green",
-        highlight: "red"
+        file: chalk.gray.bold,
+        location: chalk.gray.bold,
+        error: chalk.red.bold,
+        warning: chalk.magenta.bold,
+        note: chalk.yellow.bold,
+        message: chalk.gray.bold,
+        source: null,
+        caret: chalk.green
     },
     messageTemplate = null;
 
@@ -34,6 +36,11 @@ exports.setColorMap = function(map)
             colorMap[key] = map[key];
     }
 };
+
+function noColor(text)
+{
+    return text;
+}
 
 function findLineEnd(source, pos)
 {
@@ -55,13 +62,15 @@ function findLineEnd(source, pos)
  * @param {string} source - The source code in which the issue occurred.
  * @param {string} file - The path to the source code. This is not checked in any way so may be virtual,
  * for example "<command line>".
- * @param {acorn.Node|acorn.SourceLocation|SyntaxError|object|number} location - Where the issue occurred within the source.
+ * @param {acorn.Node|acorn.SourceLocation|SyntaxError|object|number} location - Where the issue occurred
+ * within the source. If an object, it must contain start and end properties that are zero-based indexes
+ * into the source code.
  * @param {string} message - The message to display to the user.
  * @param {string} severity - Should be "error", "warning" or "note".
  */
 var Issue = function(source, file, location, message, severity)
 {
-    global.Error.call(this);
+    SyntaxError.call(this);
 
     if (global.Error.captureStackTrace)
         global.Error.captureStackTrace(this);
@@ -99,16 +108,26 @@ var Issue = function(source, file, location, message, severity)
 };
 
 exports.Issue = Issue;
-util.inherits(Issue, global.Error);
+util.inherits(Issue, SyntaxError);
 
-Issue.prototype.isWarning = function()
+Issue.prototype.addHighlight = function(location)
 {
-    return this.severity === "warning";
+    this.highlightedNodes.push(location);
 };
 
 Issue.prototype.isError = function()
 {
-    return this.severity === "error";
+    return this instanceof exports.Error;
+};
+
+Issue.prototype.isWarning = function()
+{
+    return this instanceof exports.Warning;
+};
+
+Issue.prototype.isNote = function()
+{
+    return this instanceof exports.Note;
 };
 
 Issue.prototype.getFormattedMessage = function(colorize)
@@ -123,45 +142,29 @@ Issue.prototype.getFormattedMessage = function(colorize)
         messageTemplate = lodashTemplate(
             "${data.context} ${data.severity} ${data.message}\n" +
             "${data.source}\n" +
-            "${data.highlights}\n",
+            "${data.caret}\n",
             { variable: "data" }
         );
     }
 
-    var context = util.format("%s:%d:%d:", this.file, this.lineInfo.line, this.lineInfo.column + 1),
-        coloredContext = chalk[colorMap.message](context),
-        severity = chalk[colorMap[this.severity]](this.severity + ":"),
-        highlights = repeat(" ", this.source.length);
+    var coloredFile = (colorMap.file || noColor)(this.file + ":"),
+        location = util.format("%d:%d:", this.lineInfo.line, this.lineInfo.column + 1),
+        coloredLocation = (colorMap.location || noColor)(location),
+        severity = (colorMap[this.severity] || noColor)(this.severity + ":"),
+        caret = repeat(" ", this.source.length);
 
-    for (var i = 0; i < this.highlightedNodes.length; i++)
-    {
-        var location = this.highlightedNodes[i];
-
-        // Make sure the highlight is in range of the source line
-        if (location.start >= this.lineInfo.lineStart &&
-            location.start < (this.lineInfo.lineStart + this.lineInfo.sourceLength))
-        {
-            var offset = location.start - this.lineInfo.lineStart,
-                length = location.end - location.start;
-
-            highlights = highlights.substring(0, offset) +
-                         chalk[colorMap.highlight](repeat("‾", length)) +
-                         highlights.substring(offset + length);
-        }
-    }
-
-    highlights = highlights.substring(0, this.lineInfo.column) +
-                 chalk[colorMap.caret]("^") +
-                 trimRight(highlights.substring(this.lineInfo.column + 1));
+    caret = caret.substring(0, this.lineInfo.column) +
+                (colorMap.caret || noColor)("^") +
+                trimRight(caret.substring(this.lineInfo.column + 1));
 
     var message = this.message.charAt(0).toLowerCase() + this.message.substr(1),
         formattedMessage = messageTemplate(
             {
-                context: coloredContext,
+                context: coloredFile + coloredLocation,
                 severity: severity,
-                message: chalk[colorMap.message](message),
-                source: this.source,
-                highlights: highlights
+                message: (colorMap.message || noColor)(message),
+                source: (colorMap.source || noColor)(this.source),
+                caret: caret
             }
         );
 
@@ -170,8 +173,18 @@ Issue.prototype.getFormattedMessage = function(colorize)
     return formattedMessage;
 };
 
-Issue.prototype.getStackTrace = function()
+/**
+ * Return a stack trace for this issue, filtering out internal calls.
+ *
+ * @param {string[]} filter - Array of calls in the stack trace to filter out. Don't include "at ",
+ * and be sure to regex escape the text, for example: ["Parser\\.acorn.Parser.objj_raise"]
+ * @returns {string}
+ */
+Issue.prototype.getStackTrace = function(filter)
 {
+    // finder function sets this to the line index of the first found line
+    var lineIndex = 0;
+
     function finder(match)
     {
         var regex = new RegExp("^\\s+at " + match);
@@ -180,7 +193,7 @@ Issue.prototype.getStackTrace = function()
         {
             if (regex.test(element))
             {
-                i = index;
+                lineIndex = index;
 
                 return true;
             }
@@ -188,32 +201,44 @@ Issue.prototype.getStackTrace = function()
     }
 
     var stack = this.stack.split("\n"),
-        i = 0,
-        first = 1; // index of the first item we want to keep
+        first = -1; // index of the first item we want to keep
 
     /*
         Get rid of our internal stuff. Look for the following stack items:
 
+        - Whatever is specified in filter
         - Object.exports.addAcornError
         - 2 after addIssueFromArgs
         - exports.addIssue
         - new exports.*
     */
-    if (stack.some(finder("Object\\.exports\\.addAcornError")))
-        first = i + 1;
-    else if (stack.some(finder("addIssueFromArgs")))
-        first = i + 2;
-    else if (stack.some(finder("exports\\.addIssue")) || stack.some(finder("new exports\\.")))
-        first = i + 1;
+    if (filter !== undefined)
+    {
+        for (var i = 0; i < filter.length; ++i)
+        {
+            if (stack.some(finder(filter[i])))
+            {
+                first = lineIndex + 1;
+                break;
+            }
+        }
+    }
+
+    if (first < 0)
+    {
+        if (stack.some(finder("Object\\.exports\\.addAcornError")))
+            first = lineIndex + 1;
+        else if (stack.some(finder("addIssueFromArgs")))
+            first = lineIndex + 2;
+        else if (stack.some(finder("exports\\.addIssue")) || stack.some(finder("new exports\\.")))
+            first = lineIndex + 1;
+        else
+            first = 1;
+    }
 
     stack.splice(1, first - 1);
 
     return stack.join("\n");
-};
-
-Issue.prototype.addHighlight = function(location)
-{
-    this.highlightedNodes.push(location);
 };
 
 /** @class */
@@ -256,7 +281,7 @@ function slice(args, start)
     return copy;
 }
 
-exports.addIssue = function(Class, issues, source, file, location, message)
+function addIssue(Class, issues, source, file, location, message)
 {
     // Mozilla docs say not to use Array.prototype.slice on arguments
     var args = slice(arguments, 6);
@@ -273,7 +298,7 @@ exports.addIssue = function(Class, issues, source, file, location, message)
     issues.push(issue);
 
     return issue;
-};
+}
 
 function addIssueFromArgs(Class, args)
 {
@@ -281,7 +306,7 @@ function addIssueFromArgs(Class, args)
 
     newArgs.unshift(Class);
 
-    return exports.addIssue.apply(null, newArgs);
+    return addIssue.apply(null, newArgs);
 }
 
 /* eslint-disable no-unused-vars */
@@ -305,6 +330,14 @@ exports.addError = function(issues, source, file, location, message)
 
 var stripLocRE = /^(.+)\s+\(\d+:\d+\)$/;
 
+exports.stripLocation = function(text)
+{
+    // Strip (line:column) from message
+    var match = stripLocRE.exec(text);
+
+    return match ? match[1] : text;
+};
+
 exports.addAcornError = function(issues, error, source, file)
 {
     // Make a fake location object that contains the start position of the error
@@ -313,15 +346,8 @@ exports.addAcornError = function(issues, error, source, file)
             end: error.pos,
             loc: { line: error.loc.line, column: error.loc.column }
         },
-        message = error.message,
-
-        // Strip (line:column) from message
-        match = stripLocRE.exec(message);
-
-    if (match)
-        message = match[1];
-
-    var ex = exports.addError(
+        message = exports.stripLocation(error.message),
+        ex = exports.addError(
             issues,
             source,
             file,
@@ -349,22 +375,23 @@ exports.getWarningCount = function(issues)
     return errors.length;
 };
 
-exports.getFormattedIssues = function(issues, colorize)
+function runReport(issues, ReporterClass, colorize)
 {
     colorize = arguments.length > 1 ? !!colorize : true;
 
-    var reporter = new reporters.StandardReporter(colorize);
+    var reporter = new ReporterClass(colorize);
 
     return reporter.report(issues);
+}
+
+exports.getFormattedIssues = function(issues, colorize)
+{
+    return runReport(issues, reporters.StandardReporter, colorize);
 };
 
 exports.logIssues = function(issues, colorize)
 {
-    colorize = arguments.length > 1 ? !!colorize : true;
-
-    var reporter = new reporters.ConsoleReporter(colorize);
-
-    reporter.report(issues);
+    runReport(issues, reporters.ConsoleReporter, colorize);
 };
 
 exports.StandardReporter = reporters.StandardReporter;
