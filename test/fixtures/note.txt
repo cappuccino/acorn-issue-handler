@@ -1,0 +1,3 @@
+[90m[1mtest.js:[22m[39m[90m[1m1:5:[22m[39m [33m[1mnote:[22m[39m [90m[1mthis is a note[22m[39m
+let x = 7;
+    [32m^[39m

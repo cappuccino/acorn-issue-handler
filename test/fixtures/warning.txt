@@ -1,0 +1,5 @@
+[90m[1mtest.js:[22m[39m[90m[1m1:5:[22m[39m [35m[1mwarning:[22m[39m [90m[1mthis is a warning[22m[39m
+let x = 7;
+    [32m^[39m
+
+1 warning generated.

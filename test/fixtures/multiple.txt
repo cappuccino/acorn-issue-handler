@@ -1,0 +1,14 @@
+[90m[1mtest.js:[22m[39m[90m[1m1:5:[22m[39m [33m[1mnote:[22m[39m [90m[1mthis is a note[22m[39m
+let x = 7;
+    [32m^[39m
+[90m[1mtest.js:[22m[39m[90m[1m1:5:[22m[39m [35m[1mwarning:[22m[39m [90m[1mthis is a warning[22m[39m
+let x = 7;
+    [32m^[39m
+[90m[1mtest.js:[22m[39m[90m[1m1:5:[22m[39m [35m[1mwarning:[22m[39m [90m[1mthis is another warning[22m[39m
+let x = 7;
+    [32m^[39m
+[90m[1mtest.js:[22m[39m[90m[1m1:5:[22m[39m [31m[1merror:[22m[39m [90m[1mthis is an error[22m[39m
+let x = 7;
+    [32m^[39m
+
+2 warnings and 1 error generated.

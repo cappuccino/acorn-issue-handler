@@ -1,0 +1,5 @@
+[90m[1mtest.js:[22m[39m[90m[1m1:5:[22m[39m [31m[1merror:[22m[39m [90m[1mthis is an error[22m[39m
+let x = 7;
+    [32m^[39m
+
+1 error generated.

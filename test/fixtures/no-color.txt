@@ -1,0 +1,11 @@
+test.js:1:5: note: this is a note
+let x = 7;
+    ^
+test.js:1:5: warning: this is another warning
+let x = 7;
+    ^
+test.js:1:5: error: this is an error
+let x = 7;
+    ^
+
+1 warning and 1 error generated.
