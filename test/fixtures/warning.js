@@ -1,9 +1,8 @@
 "use strict";
 
-let data = require("./_data.js"),
-    issueHandler = require("../../index.js");
+const data = require("./_data.js");
 
 exports.run = (issues) =>
 {
-    return issueHandler.addWarning(issues, data.source, data.file, data.location, "This is a warning");
+    return issues.addWarning(data.source, data.file, data.location, data.message);
 };

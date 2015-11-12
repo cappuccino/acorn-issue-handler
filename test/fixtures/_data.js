@@ -1,7 +1,8 @@
 "use strict";
 
 module.exports = {
-    source: "let x = 7;",
+    source: "let 7x = 7;",
     file: "test.js",
-    location: { start: 4, end: 5 }
+    location: { start: 5, end: 6 },
+    message: "identifier directly after number"
 };

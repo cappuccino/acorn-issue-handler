@@ -1,0 +1,12 @@
+
+test.js[2m:[22m1:6[2m:[22m [33m[1mnote[22m[39m[2m:[22m this is a note
+let 7x = 7;
+     [32m[1m^[22m[39m
+test.js[2m:[22m1:6[2m:[22m [35m[1mwarning[22m[39m[2m:[22m this is a warning
+let 7x = 7;
+     [32m[1m^[22m[39m
+test.js[2m:[22m1:6[2m:[22m [31m[1merror[22m[39m[2m:[22m this is an error
+let 7x = 7;
+     [32m[1m^[22m[39m
+[31m[1m
+1 warning and 1 error generated.[22m[39m

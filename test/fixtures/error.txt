@@ -1,5 +1,6 @@
-[90m[1mtest.js:[22m[39m[90m[1m1:5:[22m[39m [31m[1merror:[22m[39m [90m[1mthis is an error[22m[39m
-let x = 7;
-    [32m^[39m
 
-1 error generated.
+[36m[1mtest.js[22m[39m[2m:[22m1:6[2m:[22m [31m[1merror[22m[39m[2m:[22m [1midentifier directly after number[22m
+let 7x = 7;
+     [32m[1m^[22m[39m
+[31m[1m
+1 error generated.[22m[39m

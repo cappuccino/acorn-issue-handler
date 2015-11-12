@@ -1,10 +1,12 @@
 "use strict";
 
-const data = require("./_data.js");
+const
+    data = require("./_data.js"),
+    fs = require("fs");
 
 exports.run = (issues) =>
 {
     issues.addNote(data.source, data.file, data.location, "This is a note");
-    issues.addWarning(data.source, data.file, data.location, "This is another warning");
+    issues.addWarning(data.source, data.file, data.location, "This is a warning");
     issues.addError(data.source, data.file, data.location, "This is an error");
 };

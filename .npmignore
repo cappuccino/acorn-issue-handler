@@ -1,2 +1,13 @@
+.editorconfig
+.eslintignore
+.eslintrc
+.gitignore
+.jscsrc
+.npmignore
+.travis.yml
+appveyor.yml
+gulpfile.js
+
 coverage/
+eslint-rules/
 test/

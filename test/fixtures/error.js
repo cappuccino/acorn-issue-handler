@@ -1,9 +1,8 @@
 "use strict";
 
-let data = require("./_data.js"),
-    issueHandler = require("../../index.js");
+const data = require("./_data.js");
 
 exports.run = (issues) =>
 {
-    return issueHandler.addError(issues, data.source, data.file, data.location, "This is an error");
+    return issues.addError(data.source, data.file, data.location, data.message);
 };

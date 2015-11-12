@@ -1,0 +1,14 @@
+{
+    "colorize": true,
+    "colors": {
+        "file": "bgBlue.yellow",
+        "location": "blue.underline",
+        "error": "bgRed",
+        "warning": "bgMagenta",
+        "note": "bgYellow.magenta",
+        "message": "bgGreen.bold",
+        "separator": "green",
+        "source": "inverse",
+        "caret": "cyan.bold"
+    }
+}
