@@ -11,7 +11,7 @@ exports.run = (issues) =>
         warning: "foo.bar", // invalid style
         error: "foo.bar", // invalid style
         loc: "green.bold", // invalid key
-        message: "gray.underline.bold" // valid
+        message: "gray.bold" // valid
     });
 
     issues.addNote(data.source, data.file, data.location, "This is a note");

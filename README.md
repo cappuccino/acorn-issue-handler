@@ -50,7 +50,7 @@ class Compiler
     {
         this.issues = new issueHandler.IssueList();
     }
-    
+
     compileMethodStatement(node, scope, compileNode)
     {
         const
@@ -354,7 +354,7 @@ When configuring the colors used by the reporter, you use a color map, which map
 ```js
 {
     file: "bgBlue.yellow",
-    location: "blue.underline",
+    location: "yellow",
     error: "bgRed",
     warning: "bgMagenta",
     note: "bgYellow.magenta",
@@ -380,7 +380,7 @@ A sample `.clangformatterrc` looks like this:
 {
     "colorize": true,
     "colors": {
-        "file": "blue.bold.underline",
+        "file": "yellow.bold",
         "message": "magenta.bold",
         "caret": "white.bgGreen"
     }
@@ -413,7 +413,7 @@ If you wish to explicitly set the color map, you may do so **after** instantiati
 ```js
 issueHandler.setColorMap(new Map([
     ["file", chalk.bgBlue.yellow],
-    ["location", chalk.blue.underline],
+    ["location", chalk.yellow],
     ["error", chalk.bgRed],
     ["warning", chalk.bgMagenta],
     ["note", chalk.bgYellow.magenta],
@@ -425,7 +425,7 @@ issueHandler.setColorMap(new Map([
 
 issueHandler.setColorMap({
     file: "bgBlue.yellow",
-    location: "blue.underline",
+    location: "yellow",
     error: "bgRed",
     warning: "bgMagenta",
     note: "bgYellow.magenta",

@@ -8,7 +8,7 @@ exports.run = (issues) =>
 {
     issueHandler.setColorMap({
         file: "bgBlue.yellow",
-        location: "blue.underline",
+        location: "yellow",
         error: "bgRed",
         warning: "bgMagenta",
         note: "bgYellow.magenta",

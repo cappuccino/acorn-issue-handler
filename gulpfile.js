@@ -131,3 +131,4 @@ gulp.task("mocha", mochaTask("spec"));
 gulp.task("mocha-dot", mochaTask("dot"));
 gulp.task("coverage", ["$coverage-report"], cb => cb());
 gulp.task("test", cb => runSequence("lint", "coverage", cb));
+gulp.task("default", ["test"]);

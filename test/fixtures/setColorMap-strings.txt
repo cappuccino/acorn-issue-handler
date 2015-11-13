@@ -1,11 +1,11 @@
 
-[44m[33mtest.js[39m[49m[32m:[39m[34m[4m1:6[24m[39m[32m:[39m [43m[35mnote[39m[49m[32m:[39m [42m[1mthis is a note[22m[49m
+[44m[33mtest.js[39m[49m[32m:[39m[33m1:6[39m[32m:[39m [43m[35mnote[39m[49m[32m:[39m [42m[1mthis is a note[22m[49m
 [7mlet 7x = 7;[27m
      [36m[1m^[22m[39m
-[44m[33mtest.js[39m[49m[32m:[39m[34m[4m1:6[24m[39m[32m:[39m [45mwarning[49m[32m:[39m [42m[1mthis is a warning[22m[49m
+[44m[33mtest.js[39m[49m[32m:[39m[33m1:6[39m[32m:[39m [45mwarning[49m[32m:[39m [42m[1mthis is a warning[22m[49m
 [7mlet 7x = 7;[27m
      [36m[1m^[22m[39m
-[44m[33mtest.js[39m[49m[32m:[39m[34m[4m1:6[24m[39m[32m:[39m [41merror[49m[32m:[39m [42m[1mthis is an error[22m[49m
+[44m[33mtest.js[39m[49m[32m:[39m[33m1:6[39m[32m:[39m [41merror[49m[32m:[39m [42m[1mthis is an error[22m[49m
 [7mlet 7x = 7;[27m
      [36m[1m^[22m[39m
 [41m

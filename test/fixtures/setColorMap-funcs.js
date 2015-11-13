@@ -9,7 +9,7 @@ exports.run = (issues) =>
 {
     issueHandler.setColorMap(new Map([
         ["file", chalk.bgBlue.yellow],
-        ["location", chalk.blue.underline],
+        ["location", chalk.yellow],
         ["error", chalk.bgRed],
         ["warning", chalk.bgMagenta],
         ["note", chalk.bgYellow.magenta],
