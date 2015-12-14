@@ -1,6 +1,6 @@
 .editorconfig
 .eslintignore
-.eslintrc
+.eslintrc.yml
 .gitignore
 .jscsrc
 .npmignore
