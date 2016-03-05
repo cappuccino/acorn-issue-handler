@@ -36,7 +36,7 @@
     "capture-stream": "^0.1.1",
     "code": "^2.0.0",
     "del": "^2.2.0",
-    "eslint": "^1.10.0",
+    "eslint": "^2.3.0",
     "eslint-clang-formatter": "^1.2.1",
     "eslint-config-cappuccino": "^1.2.1",
     "gulp": "^3.x",
