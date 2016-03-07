@@ -38,7 +38,7 @@
     "del": "^2.2.0",
     "eslint": "^1.10.0",
     "eslint-clang-formatter": "^1.2.1",
-    "eslint-config-cappuccino": "^1.2.1",
+    "eslint-config-cappuccino": "^1.3.1",
     "gulp": "^3.x",
     "gulp-changed": "^1.3.0",
     "gulp-eslint": "^1.1.1",
