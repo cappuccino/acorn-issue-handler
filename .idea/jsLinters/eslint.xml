@@ -2,6 +2,6 @@
 <project version="4">
   <component name="EslintConfiguration">
     <custom-configuration-file used="true" path="$PROJECT_DIR$/.eslintrc.yml" />
-    <extra-options value="--rulesdir eslint-rules" />
+    <extra-options value="--rulesdir node_modules/eslint-config-cappuccino/lib/rules" />
   </component>
 </project>

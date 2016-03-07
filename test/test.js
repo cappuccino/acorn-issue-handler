@@ -9,9 +9,7 @@ const
     issueHandler = require("../lib/index.js"),
     path = require("path");
 
-/* eslint-disable no-unused-expressions */
-
-// jscs: disable maximumLineLength
+/* eslint-disable no-unused-expressions, max-len */
 
 describe("API", () =>
 {
@@ -270,7 +268,7 @@ describe("API", () =>
 
     it("should return an empty string from SilentReporter#report", () =>
     {
-        const reporter = new issueHandler.SilentReporter();
+        const reporter = new issueHandler.reporters.SilentReporter();
 
         issues.addError(data.source, data.file, data.location, data.message);
         expect(reporter.report()).to.be.empty();

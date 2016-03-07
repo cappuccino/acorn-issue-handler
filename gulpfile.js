@@ -33,7 +33,7 @@ gulp.task("clean-fixtures", () => del(paths.cleanFixtures));
 
 gulp.task("lint:eslint", () =>
     gulp.src(paths.lint)
-        .pipe($.eslint({ rulePaths: ["eslint-rules"] }))
+        .pipe($.eslint({ rulePaths: ["node_modules/eslint-config-cappuccino/lib/rules"] }))
         .pipe($.eslint.format("node_modules/eslint-clang-formatter"))
         .pipe($.eslint.failAfterError())
 );
@@ -122,9 +122,7 @@ gulp.task("$coverage-mocha", ["$coverage-setup"], mochaTask("dot"));
 gulp.task("$coverage-report", ["$coverage-mocha"], () =>
     gulp.src(paths.test)
         .pipe($.istanbul.writeReports({ reporters: ["text", "html"] }))
-        .pipe($.istanbul.enforceThresholds({
-             thresholds: { global: 100 }
-        }))
+        .pipe($.istanbul.enforceThresholds({ thresholds: { global: 100 }}))
 );
 
 gulp.task("mocha", mochaTask("spec"));
