@@ -50,7 +50,7 @@
     "gulp-rename": "^1.2.2",
     "gulp-util": "^3.0.6",
     "jscs": "^2.7.0",
-    "jscs-cappuccino": "^1.0.8",
+    "jscs-cappuccino": "^1.1.0",
     "jscs-clang-reporter": "^1.1.10",
     "run-sequence": "^1.1.5",
     "through2": "^2.0.0"
