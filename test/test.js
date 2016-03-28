@@ -273,4 +273,9 @@ describe("API", () =>
         issues.addError(data.source, data.file, data.location, data.message);
         expect(reporter.report()).to.be.empty();
     });
+
+    it("should filter an issue list using the IssueList#filter method", () =>
+    {
+        testIssues(2, "filter");
+    });
 });

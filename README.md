@@ -187,6 +187,11 @@ This convenience method instantiates a [StandardReporter](#standardreporter) wit
 
 This convenience method instantiates a [ConsoleReporter](#consolereporteroptions-extends-standardreporter) with `options`, calls its `report` method, and returns the result.
 
+
+#### filter(callback)
+
+Filters the issue list according to `callback`, which should conform to the `Array.prototype.filter` callback protocol. Within `callback`, `this` is the issue list.
+
 --
 
 ### Issue \[extends SyntaxError]
