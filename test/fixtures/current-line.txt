@@ -2,5 +2,8 @@
 [36m[1mtest.js[22m[39m[2m:[22m2:5[2m:[22m [31m[1merror[22m[39m[2m:[22m [1midentifier directly after number[22m
     y = 13,
     [32m[1m^[22m[39m
+[36m[1mtest.js[22m[39m[2m:[22m1:1[2m:[22m [31m[1merror[22m[39m[2m:[22m [1mduplicate method definition[22m
+-(void)test:(int)arg
+[32m[1m^[22m[39m
 [31m[1m
-1 error generated.[22m[39m
+2 errors generated.[22m[39m

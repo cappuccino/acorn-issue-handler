@@ -148,7 +148,7 @@ describe("API", () =>
 
     it("should correctly determine the current line of text", () =>
     {
-        testIssues(1, "current-line", "isError");
+        testIssues(2, "current-line", "isError");
     });
 
     it("should work with chai.throw", () =>
