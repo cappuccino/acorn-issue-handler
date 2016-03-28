@@ -130,6 +130,29 @@ issues.addError(
 ```
 
 
+#### addIssue(Class, source, file, location, message, ...)
+
+If you need to add your own Issue/Error/Warning/Note subclass to the list, use this method. The parameters after `Class` are the same as the parameters to `addError/addWarning/addNote`.
+
+For example, if you create your own subclass of Warning:
+
+```js
+class UnknownIdentifierWarning extends issueHandler.Warning
+{
+    // methods
+}
+
+issues.addIssue(
+    UnknownIdentifierWarning,
+    source,
+    file,
+    node,
+    "unknown identifier '%s'",
+    node.name
+);
+```
+
+
 #### addAcornError(error, source, file)
 
 Converts a `SyntaxError` thrown by `acorn` (which has added location information) into an [Error](#errorextends-issue) instance, adds the instance to the issue list, and returns the instance. Typically you would use it like this:
