@@ -109,7 +109,7 @@ These methods add an issue of the appropriate subclass to the issue list and ret
  * **source** - The source code in which the issue occurred.
  * **file** - The path to the source code. This is not checked in any way for validity, so it may be virtual, for example "\<command line>".
  * **location** - Where the issue occurred. This may be:
-    - An `acorn.Node` object
+    - An `acorn.Node` object with or without a `loc` object created when the `locations` options is true.
     - An `acorn.SourceLocation` object
     - A `SyntaxError` thrown by acorn
     - Any object which has zero-based `start` and `end` properties which are indexes into `source`
