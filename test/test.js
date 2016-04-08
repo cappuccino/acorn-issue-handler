@@ -163,7 +163,7 @@ describe("API", () =>
 
     it("should consider valid location to be acorn.Node|acorn.SourceLocation|acorn SyntaxError|{start, end}|number", () =>
     {
-        testIssues(5, "location");
+        testIssues(6, "location");
     });
 
     it("should convert SyntaxError thrown by acorn to an Error with no (line:column) in the message when calling addAcornError", () =>
