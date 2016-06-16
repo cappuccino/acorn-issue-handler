@@ -49,7 +49,7 @@ describe("API", () =>
         if (count === 1)
         {
             expect(issueHandler.isIssue(issue)).to.be.true();
-            expect(issue[categorizeFunc]()).to.be.true();
+            expect(issue["is" + categorizeFunc]()).to.be.true();
             expect(issue.message).to.equal(data.message);
         }
 
@@ -68,17 +68,17 @@ describe("API", () =>
 
     it("should create a Note instance and add it to an issue list when calling addNote", () =>
     {
-        testIssues(1, "note", "isNote");
+        testIssues(1, "note", "Note");
     });
 
     it("should create a Warning instance and add it to an issue list when calling addWarning", () =>
     {
-        testIssues(1, "warning", "isWarning");
+        testIssues(1, "warning", "Warning");
     });
 
     it("should create an Error instance and add it to an issue list when calling addError", () =>
     {
-        testIssues(1, "error", "isError");
+        testIssues(1, "error", "Error");
     });
 
     it("should use util.format to format the message and following args when calling addError", () =>
@@ -148,7 +148,7 @@ describe("API", () =>
 
     it("should correctly determine the current line of text", () =>
     {
-        testIssues(2, "current-line", "isError");
+        testIssues(2, "current-line", "Error");
     });
 
     it("should work with chai.throw", () =>
@@ -164,6 +164,21 @@ describe("API", () =>
     it("should consider valid location to be acorn.Node|acorn.SourceLocation|acorn SyntaxError|{start, end}|number", () =>
     {
         testIssues(6, "location");
+    });
+
+    it("should allow a source line to be passed as { line: <source> }", () =>
+    {
+        testIssues(1, "line", "Error");
+    });
+
+    it("should throw a TypeError if source is not a string or { line: <string> }", () =>
+    {
+        function throwTypeError()
+        {
+            issues.addError({ source: data.source }, data.file, data.location, "This should fail");
+        }
+
+        expect(throwTypeError).to.throw(TypeError);
     });
 
     it("should convert SyntaxError thrown by acorn to an Error with no (line:column) in the message when calling addAcornError", () =>
@@ -186,7 +201,7 @@ describe("API", () =>
     {
         let issue = issues.addError(data.source, data.file, data.location, data.message);
 
-        expect(issue.getStackTrace()).to.match(/^Error: identifier directly after number\n\s+ at Context\.<anonymous>/);
+        expect(issue.getStackTrace()).to.match(/^Error: identifier directly after number\n\s+ at Context\./);
 
         try
         {
@@ -195,18 +210,18 @@ describe("API", () =>
         catch (ex)
         {
             issue = issues.addAcornError(ex, data.source, data.file);
-            expect(issue.getStackTrace()).to.match(/^SyntaxError: Identifier directly after number\n\s+ at Context\.<anonymous>/);
+            expect(issue.getStackTrace()).to.match(/^SyntaxError: Identifier directly after number\n\s+ at Context\./);
         }
 
         // stripLocation is called for code coverage
         issue = new issueHandler.Error(data.source, data.file, data.location, issueHandler.stripLocation(data.message));
-        expect(issue.getStackTrace()).to.match(/^Error: identifier directly after number\n\s+ at Context\.<anonymous>/);
+        expect(issue.getStackTrace()).to.match(/^Error: identifier directly after number\n\s+ at Context\./);
 
         issue = new issueHandler.Warning(data.source, data.file, data.location, data.message);
-        expect(issue.getStackTrace()).to.match(/^Warning: identifier directly after number\n\s+ at Context\.<anonymous>/);
+        expect(issue.getStackTrace()).to.match(/^Warning: identifier directly after number\n\s+ at Context\./);
 
         issue = new issueHandler.Note(data.source, data.file, data.location, data.message);
-        expect(issue.getStackTrace()).to.match(/^Note: identifier directly after number\n\s+ at Context\.<anonymous>/);
+        expect(issue.getStackTrace()).to.match(/^Note: identifier directly after number\n\s+ at Context\./);
     });
 
     it("should filter out calls at or above those passed to getStackTrace in the filter parameter", () =>
