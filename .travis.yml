@@ -1,12 +1,18 @@
 language: node_js
 
-# Use container-based infrastructure
-sudo: false
+# Use trusty
+sudo: true
+dist: trusty
+
+# Don't build commits in the queue if a new commit arrives
+git:
+  depth: 1
 
 # node versions to test
 node_js:
-  - "4"    # latest LTS version
-  - "5"    # latest version
+  - "4"    # minimum version
+  - "5"    # latest LTS version
+  - "6"    # latest version
 
 # If any version fails, cancel the others
 matrix:
